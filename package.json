@@ -16,10 +16,10 @@
     "@react-navigation/drawer": "^6.6.6",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
+    "@react-navigation/stack": "^7.2.9",
     "@reduxjs/toolkit": "^2.0.1",
     "axios": "^1.6.5",
     "deprecated-react-native-prop-types": "^5.0.0",
-    "evenhub": "file:",
     "fbjs": "^3.0.5",
     "iconsax-react-native": "^0.0.8",
     "query-string": "^8.1.0",
@@ -37,7 +37,8 @@
     "react-native-swiper": "^1.6.0",
     "react-native-vector-icons": "^10.0.3",
     "react-redux": "^9.1.0",
-    "redux": "^5.0.1"
+    "redux": "^5.0.1",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
