@@ -8,7 +8,9 @@ INJECTED from C:\Users\Admin\hnprj\android\app\src\debug\AndroidManifest.xml:2:1
 MERGED from [com.facebook.react:flipper-integration:0.73.2] C:\Users\Admin\.gradle\caches\transforms-3\50aac7d389ae5d1436ebe9b90990835b\transformed\jetified-flipper-integration-0.73.2-debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:react-native-vector-icons] C:\Users\Admin\hnprj\node_modules\react-native-vector-icons\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:react-native-async-storage_async-storage] C:\Users\Admin\hnprj\node_modules\@react-native-async-storage\async-storage\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:2:1-7:12
+MERGED from [:react-native-community_checkbox] C:\Users\Admin\hnprj\node_modules\@react-native-community\checkbox\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:react-native-google-signin_google-signin] C:\Users\Admin\hnprj\node_modules\@react-native-google-signin\google-signin\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:2:1-7:12
+MERGED from [:react-native-picker_picker] C:\Users\Admin\hnprj\node_modules\@react-native-picker\picker\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:react-native-fbsdk-next] C:\Users\Admin\hnprj\node_modules\react-native-fbsdk-next\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:21:1-26:12
 MERGED from [:react-native-gesture-handler] C:\Users\Admin\hnprj\node_modules\react-native-gesture-handler\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:react-native-image-picker] C:\Users\Admin\hnprj\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:2:1-19:12
@@ -258,8 +260,12 @@ MERGED from [:react-native-vector-icons] C:\Users\Admin\hnprj\node_modules\react
 MERGED from [:react-native-vector-icons] C:\Users\Admin\hnprj\node_modules\react-native-vector-icons\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:react-native-async-storage_async-storage] C:\Users\Admin\hnprj\node_modules\@react-native-async-storage\async-storage\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:react-native-async-storage_async-storage] C:\Users\Admin\hnprj\node_modules\@react-native-async-storage\async-storage\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:5:5-44
+MERGED from [:react-native-community_checkbox] C:\Users\Admin\hnprj\node_modules\@react-native-community\checkbox\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:5:5-44
+MERGED from [:react-native-community_checkbox] C:\Users\Admin\hnprj\node_modules\@react-native-community\checkbox\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:react-native-google-signin_google-signin] C:\Users\Admin\hnprj\node_modules\@react-native-google-signin\google-signin\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:react-native-google-signin_google-signin] C:\Users\Admin\hnprj\node_modules\@react-native-google-signin\google-signin\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:5:5-44
+MERGED from [:react-native-picker_picker] C:\Users\Admin\hnprj\node_modules\@react-native-picker\picker\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:5:5-44
+MERGED from [:react-native-picker_picker] C:\Users\Admin\hnprj\node_modules\@react-native-picker\picker\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:react-native-fbsdk-next] C:\Users\Admin\hnprj\node_modules\react-native-fbsdk-next\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:24:5-44
 MERGED from [:react-native-fbsdk-next] C:\Users\Admin\hnprj\node_modules\react-native-fbsdk-next\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:24:5-44
 MERGED from [:react-native-gesture-handler] C:\Users\Admin\hnprj\node_modules\react-native-gesture-handler\android\build\intermediates\merged_manifest\debug\AndroidManifest.xml:5:5-44

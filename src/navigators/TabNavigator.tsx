@@ -11,6 +11,7 @@ import {
   Home2,
   Iost,
   Location,
+  ShoppingBag,
   User,
 } from 'iconsax-react-native';
 import { CircleComponent, TextComponent } from '../components';
@@ -19,6 +20,8 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { globalStyles } from '../styles/globalStyles';
 import DrawerNavigator from './DrawerNavigator';
 import UserProfileStats from '../screens/profiles/UserProfileStats';
+import MeScreen from '../screens/profiles/MeScreen';
+import ProductScreen from '../screens/product/ProductScreen';
 
 const TabNavigator = () => {
   const Tab = createBottomTabNavigator();
@@ -42,24 +45,24 @@ const TabNavigator = () => {
               icon = <MaterialIcons name="home" size={size} color={color} />;
               break;
 
+              case 'Product':
+                icon = (
+                  <CircleComponent
+                    size={52}
+                    styles={[
+                      globalStyles.shadow,
+                      { marginTop: Platform.OS === 'ios' ? -50 : -60 },
+                    ]}>
+                    <ShoppingBag size={24} color={appColors.white} variant="Bold" />
+                  </CircleComponent>
+                );
+                break;
             
-            
-            case 'Profile':
+            case 'Me':
               icon = <User size={size} variant="Bold" color={color} />;
               break;
 
-            case 'Add':
-              icon = (
-                <CircleComponent
-                  size={52}
-                  styles={[
-                    globalStyles.shadow,
-                    { marginTop: Platform.OS === 'ios' ? -50 : -60 },
-                  ]}>
-                  <AddSquare size={24} color={appColors.white} variant="Bold" />
-                </CircleComponent>
-              );
-              break;
+            
           }
           return icon;
         },
@@ -80,8 +83,10 @@ const TabNavigator = () => {
           );
         },
       })}>
+
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Profile" component={ProfileNavigator} />
+        <Tab.Screen name="Product" component={ProductScreen} />
+      <Tab.Screen name="Me" component={MeScreen} />
     </Tab.Navigator>
   );
 };

@@ -1,4 +1,4 @@
-import { io, Socket } from 'socket.io-client';
+import {io, Socket} from 'socket.io-client';
 
 interface NotificationPayload {
   type: 'order' | 'post' | 'review' | 'comment';
@@ -6,11 +6,10 @@ interface NotificationPayload {
 }
 
 export interface OrderData {
-  orderId: string;
   customerName: string;
   type: 'order';
   totalAmount: number;
-  itemCount: number;
+  quantity?: number;
 }
 
 export interface PostData {
@@ -56,7 +55,7 @@ class SocketManager {
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: this.reconnectInterval,
-      timeout: 10000
+      timeout: 10000,
     });
 
     this.setupSocketListeners(socket);
@@ -69,19 +68,19 @@ class SocketManager {
       this.reconnectAttempts = 0;
     });
 
-    socket.on('connect_error', (error) => {
+    socket.on('connect_error', error => {
       console.error('Socket connection error:', error);
       this.handleReconnect();
     });
 
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', reason => {
       console.log('Socket disconnected:', reason);
       if (reason === 'io server disconnect') {
         this.handleReconnect();
       }
     });
 
-    socket.on('error', (error) => {
+    socket.on('error', error => {
       console.error('Socket error:', error);
     });
   }
@@ -89,7 +88,9 @@ class SocketManager {
   private handleReconnect(): void {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(`Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+      console.log(
+        `Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
+      );
       setTimeout(() => {
         this.socket.connect();
       }, this.reconnectInterval);
@@ -110,7 +111,7 @@ class SocketManager {
 
   public emitNewOrder(orderData: OrderData): void {
     if (!orderData) return;
-    
+
     if (this.socket.connected) {
       this.socket.emit('new-order', orderData);
       console.log('New order emitted:', orderData);
@@ -121,7 +122,7 @@ class SocketManager {
 
   public emitNewPost(postData: PostData): void {
     if (!postData) return;
-    
+
     if (this.socket.connected) {
       this.socket.emit('new-post', postData);
       console.log('New post emitted:', postData);
@@ -132,7 +133,7 @@ class SocketManager {
 
   public emitNewReview(reviewData: ReviewData): void {
     if (!reviewData) return;
-    
+
     if (this.socket.connected) {
       this.socket.emit('new-review', reviewData);
       console.log('New review emitted:', reviewData);
@@ -143,7 +144,7 @@ class SocketManager {
 
   public emitNewComment(commentData: CommentData): void {
     if (!commentData) return;
-    
+
     if (this.socket.connected) {
       this.socket.emit('new-comment', commentData);
       console.log('New comment emitted:', commentData);

@@ -1,113 +1,120 @@
-import axiosClient from '../../apis/axiosClient'; // Your configured axios instance
+import axiosClient from '../../apis/axiosClient';
 import { useSelector } from 'react-redux';
-import { authSelector } from '../../redux/reducers/authReducer'; // Adjust the import path as necessary
+import { authSelector } from '../../redux/reducers/authReducer';
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const UserProfileStats = () => {
   const authData = useSelector(authSelector);
-  const userId = authData.id; // Get the logged-in user's ID
+  const userId = authData.id;
 
   const [stats, setStats] = useState<{ completedOrdersCount: number; totalCompletedAmount: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-
   useEffect(() => {
     if (!userId) {
-      setError("User ID not found.");
+      setError("Không tìm thấy người dùng.");
       setLoading(false);
       return;
     }
 
     const fetchStats = async () => {
-        setLoading(true);
-        setError(null);
-        // Initialize stats, perhaps to zero or null depending on preference
-        setStats({ completedOrdersCount: 0, totalCompletedAmount: 0 });
+      setLoading(true);
+      setError(null);
+      setStats({ completedOrdersCount: 0, totalCompletedAmount: 0 });
 
-        try {
-            // Call the API endpoint
-            const response = await axiosClient.get(`/order/status/${userId}`);
-
-            // Handle successful response with data
-            console.log("User stats response (Success):", response);
-            if (response && response.result) {
-                setStats({
-                    completedOrdersCount: response.result.completedOrdersCount || 0,
-                    totalCompletedAmount: response.result.totalCompletedAmount || 0,
-                });
-            } else {
-                // Handle successful response but missing 'result' data
-                console.warn("User stats response received, but 'result' field is missing or invalid:", response);
-                setStats({ completedOrdersCount: 0, totalCompletedAmount: 0 });
-            }
-
-        } catch (err: any) {
-            console.error("Error fetching user stats:", err);
-
-            // Check if the error has a response from the server
-            if (err.response) {
-                console.error("Error response data:", err.response.data);
-                console.error("Error response status:", err.response.status);
-
-                // --- Specifically handle the "Not Found" case ---
-                // Assuming backend returns 404 and this specific message
-                if (
-                    err.response.status === 404 &&
-                    err.response.data?.message === "Không tìm thấy đơn hàng của người dùng này" // Adjust message if needed
-                ) {
-                    // This is not a critical error, just means no orders found
-                    console.log("User has no order history, setting stats to zero.");
-                    setStats({ completedOrdersCount: 0, totalCompletedAmount: 0 });
-                    setError(null); // Clear any potential error state
-                } else {
-                    // --- Handle other server errors (500, 403, 401, etc.) ---
-                    const errorMessage = err.response.data?.message || "Failed to load statistics due to a server error.";
-                    setError(errorMessage);
-                    setStats(null); // Indicate an error state by setting stats to null
-                }
-            } else if (err.request) {
-                // Handle network errors (no response received)
-                console.error("Error request:", err.request);
-                setError("Could not connect to the server.");
-                setStats(null);
-            } else {
-                // Handle errors setting up the request
-                console.error('Error message:', err.message);
-                setError("An error occurred while making the request.");
-                setStats(null);
-            }
-        } finally {
-            setLoading(false); // Always stop loading indicator
+      try {
+        const response = await axiosClient.get(`/order/status`);
+        console.log('Response:', response);
+        if (response && response.result) {
+          setStats({
+            completedOrdersCount: response.result.completedOrdersCount || 0,
+            totalCompletedAmount: response.result.totalCompletedAmount || 0,
+          });
+        } else {
+          setStats({ completedOrdersCount: 0, totalCompletedAmount: 0 });
         }
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          setStats({ completedOrdersCount: 0, totalCompletedAmount: 0 });
+        } else {
+          const msg = err.response?.data?.message || 'Lỗi khi tải dữ liệu.';
+          setError(msg);
+          setStats(null);
+        }
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchStats();
-  }, [userId]); // Dependency array remains the same
+  }, [userId]);
 
-
-  if (loading) {
-    return <ActivityIndicator size="large" />;
-  }
-
-  if (error) {
-    return <Text style={{ color: 'red', textAlign: 'center' }}>Error: {error}</Text>;
-  }
+  if (loading) return <ActivityIndicator size="large" color="#F44336" style={{ marginTop: 20 }} />;
+  if (error) return <Text style={styles.errorText}>Lỗi: {error}</Text>;
 
   return (
-    <View style={{ padding: 15, alignItems: 'center' }}>
-      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Thống kê đơn hàng đã hoàn thành</Text>
-      {stats ? (
-        <>
-          <Text>Tổng số đơn hàng: {stats.completedOrdersCount}</Text>
-          <Text>Tổng chi tiêu: {stats.totalCompletedAmount.toLocaleString()} đ</Text>
-        </>
-      ) : (
-        <Text>Không có dữ liệu thống kê.</Text>
-      )}
+    <View style={styles.card}>
+      <Text style={styles.title}>📦 Thống kê đơn hàng đã hoàn thành</Text>
+      <View style={styles.row}>
+        <MaterialIcons name="shopping-bag" size={28} color="#4CAF50" />
+        <Text style={styles.label}>Tổng đơn:</Text>
+        <Text style={styles.value}>{stats?.completedOrdersCount ?? 0}</Text>
+      </View>
+      <View style={styles.row}>
+        <MaterialIcons name="attach-money" size={28} color="#FF9800" />
+        <Text style={styles.label}>Tổng chi tiêu:</Text>
+        <Text style={styles.value}>{(stats?.totalCompletedAmount ?? 0).toLocaleString()} đ</Text>
+      </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#fff',
+
+    padding: 20,
+    borderRadius: 12,
+    marginTop:30,
+    marginHorizontal: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 6,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 6,
+  },
+  label: {
+    fontSize: 14,
+    marginLeft: 10,
+    color: '#555',
+    flex: 1,
+  },
+  value: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#222',
+  },
+  errorText: {
+    textAlign: 'center',
+    marginTop: 20,
+    color: 'red',
+    fontSize: 14,
+  },
+});
 
 export default UserProfileStats;

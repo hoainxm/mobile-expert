@@ -19,9 +19,11 @@ const OrderHistoryScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const response = await axiosClient.get(`/order/user/${userId}`);
-               if (response.success === true) {
-                    setOrders(response.orders); // Lấy danh sách đơn hàng từ `response.orders`
+                const orders = await axiosClient.get(`/order/user/${userId}`);
+               
+               console.log('Đơn hàng:', orders); // Kiểm tra dữ liệu đơn hàng
+                if (orders) {
+                    setOrders(orders); // Lấy danh sách đơn hàng từ `response.orders`
                 }
                 else {
                     setOrders([]); // Nếu không có đơn hàng, set orders thành mảng rỗng
@@ -40,7 +42,7 @@ const OrderHistoryScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const renderItem = ({ item }: { item: any }) => (
         <TouchableOpacity
             style={styles.orderCard}
-            onPress={() => navigation.navigate('orderDetail', { orderId: item._id })}
+            onPress={() => navigation.navigate('OrderDetail', { orderId: item._id })}
         >
             <Text style={styles.orderId}>Mã đơn hàng: {item._id}</Text>
             <Text style={styles.orderTotal}>Tổng tiền: {item.totalAmount.toLocaleString()} đ</Text>

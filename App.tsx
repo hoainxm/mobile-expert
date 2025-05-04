@@ -1,20 +1,36 @@
 import {NavigationContainer} from '@react-navigation/native';
-import React, { useEffect } from 'react';
+import React, {useEffect} from 'react';
 import {Alert, StatusBar} from 'react-native';
 import {Provider} from 'react-redux';
 import AppRouters from './src/navigators/AppRouters';
 import store from './src/redux/store';
-import { setupSocketListeners } from './src/utils/NotificationSocket';
-
+import socketManager from './src/utils/NotificationSocket';
 
 const App = () => {
-  // Thiết lập socket khi ứng dụng khởi động
   useEffect(() => {
-    setupSocketListeners((payload) => {
-      // Hiển thị notification hoặc thêm vào danh sách
-      Alert.alert("Thông báo", `Có ${payload.type} mới!`);
+    socketManager.setupNotificationListener(payload => {
+      console.log('Notification received:', payload);
+      Alert.alert(
+        '🛒 Đơn hàng mới',
+        `Khách hàng: ${
+          payload.data.customerName
+        }\nTổng tiền: ${payload.data.totalAmount.toLocaleString()} đ\nSố sản phẩm: ${
+          payload.data.quantity
+        }`,
+        [
+          {
+            text: 'Xem chi tiết',
+            onPress: () => {
+              // Điều hướng hoặc xử lý hành động khi nhấn
+              console.log('View details pressed');
+            },
+          },
+          {text: 'Đóng', style: 'cancel'},
+        ],
+      );
     });
-  }, []);
+  }, []); // chỉ gọi 1 lần
+
   return (
     <>
       <Provider store={store}>

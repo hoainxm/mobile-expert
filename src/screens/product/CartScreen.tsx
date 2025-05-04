@@ -1,33 +1,41 @@
-import React, { useEffect, useState } from 'react';
+// CartScreen.tsx
+import React, {useEffect, useState} from 'react';
 import {
-  View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Alert
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  CheckBox,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useSelector} from 'react-redux';
 import axiosClient from '../../apis/axiosClient';
-import { useSelector } from 'react-redux';
-import { authSelector } from '../../redux/reducers/authReducer';
-import {emitNewOrder, OrderData} from '../../utils/NotificationSocket'
-interface CartItem {
+import {authSelector} from '../../redux/reducers/authReducer';
+import {OrderData} from '../../utils/NotificationSocket';
+import CartItem from '../../components/CartItem';
+import {Icon} from 'iconsax-react-native';
+import {useNavigation} from '@react-navigation/native';
+
+interface CartItemType {
   id: string;
   name: string;
   imageUrl: string;
   price: number;
   quantity: number;
+  variant?: string;
 }
 
-interface orderApiResponse {
-  messenger: string;
-  order?:{
-    id:string;
-    customeName:string;
-  };
-}
 const CartScreen: React.FC = () => {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItemType[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
-  const authData = useSelector(authSelector); // Lấy thông tin người dùng từ Redux
-  const userId = authData.id; // Lấy userId
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const authData = useSelector(authSelector);
+  const userId = authData.id;
   const userName = authData.email || 'Khách hàng';
+  const navigation = useNavigation();
+
   useEffect(() => {
     loadCart();
   }, []);
@@ -35,128 +43,100 @@ const CartScreen: React.FC = () => {
   const loadCart = async () => {
     try {
       const cartData = await AsyncStorage.getItem('cart');
-      const parsedCart: CartItem[] = cartData ? JSON.parse(cartData) : [];
+      const parsedCart: CartItemType[] = cartData ? JSON.parse(cartData) : [];
       setCart(parsedCart);
-      calculateTotal(parsedCart);
+      calculateTotal(parsedCart, selectedItems);
     } catch (error) {
-      console.error("Lỗi khi tải giỏ hàng:", error);
+      console.error('Lỗi khi tải giỏ hàng:', error);
     }
   };
 
-  const calculateTotal = (cartItems: CartItem[]) => {
-    const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const calculateTotal = (cartItems: CartItemType[], selectedIds: string[]) => {
+    const total = cartItems
+      .filter(item => selectedIds.includes(item.id))
+      .reduce((sum, item) => sum + item.price * item.quantity, 0);
     setTotalPrice(total);
   };
 
   const handleCheckout = () => {
-    if (cart.length === 0) {
-      Alert.alert('Thông báo', 'Giỏ hàng của bạn đang trống!');
+    if (selectedItems.length === 0) {
+      Alert.alert('Thông báo', 'Bạn chưa chọn sản phẩm nào!');
       return;
     }
-
-    Alert.alert(
-      'Chọn phương thức thanh toán',
-      `Tổng tiền: ${totalPrice.toLocaleString()} đ`,
-      [
-        { text: 'Thanh toán COD', onPress: handleCODPayment },
-        { text: 'Thanh toán Online', onPress: () => Alert.alert('Online', 'Chuyển sang thanh toán online') },
-        { text: 'Hủy', style: 'cancel' }
-      ]
-    );
+    navigation.navigate('CheckoutScreen', {
+      items: cart,
+      totalAmount: totalPrice,
+    });
   };
 
-  const handleCODPayment = async () => {
-    if (!userId) {
-      Alert.alert('Lỗi', 'Không tìm thấy thông tin người dùng.');
-      return;
-    }
-
-    try {
-      const orderData = {
-        userId, // Thêm userId vào đơn hàng
-        totalAmount: totalPrice,
-        items: cart.map(item => ({
-          id: item.id,
-          name: item.name,
-          imageUrl: item.imageUrl,
-          price: item.price,
-          quantity: item.quantity
-        })),
-        paymentMethod: 'COD'
-      };
-
-      const response = await axiosClient.post('/order/cod', orderData);
-      if (response.status === 201) {
-        Alert.alert('Thành công', 'Đơn hàng COD đã được đặt thành công!');
-       
-        const notificationPayload: OrderData = {
-          orderId: response.data.orderId,
-          customerName: userName,
-          type: 'order',
-          totalAmount: totalPrice,
-          itemCount: cart.length,
-        };
-        emitNewOrder(notificationPayload); // Gửi thông báo đơn hàng mới qua socket
-        await AsyncStorage.removeItem('cart');
-        setCart([]);
-        setTotalPrice(0);
-      } else {
-        throw new Error(response.data?.message || 'Không thể đặt hàng');
-      }
-    } catch (error: any) {
-      console.error('Lỗi khi đặt hàng COD:', error);
-      Alert.alert('Lỗi', error.response?.data?.message || error.message || 'Đã có lỗi xảy ra khi đặt hàng COD');
-    }
-
+  const toggleSelectItem = (itemId: string) => {
+    const updatedSelection = selectedItems.includes(itemId)
+      ? selectedItems.filter(id => id !== itemId)
+      : [...selectedItems, itemId];
+    setSelectedItems(updatedSelection);
+    calculateTotal(cart, updatedSelection);
   };
 
-  // Hàm thay đổi số lượng
   const changeQuantity = (itemId: string, newQuantity: number) => {
-    if (newQuantity <= 0) return; // Không giảm số lượng dưới 1
-
+    if (newQuantity <= 0) return;
     const updatedCart = cart.map(item =>
-      item.id === itemId ? { ...item, quantity: newQuantity } : item
+      item.id === itemId ? {...item, quantity: newQuantity} : item,
     );
-
     setCart(updatedCart);
-    calculateTotal(updatedCart);
-    AsyncStorage.setItem('cart', JSON.stringify(updatedCart)); // Cập nhật giỏ hàng trong AsyncStorage
+    calculateTotal(updatedCart, selectedItems);
+    AsyncStorage.setItem('cart', JSON.stringify(updatedCart));
+  };
+
+  const onBack = () => {
+    // Handle back navigation
   };
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+          <Icon name="arrow-left" size={24} color="#000" variant="Bold" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Giỏ hàng ({cart.length})</Text>
+      </View>
+
       <FlatList
         data={cart}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Image source={{ uri: item.imageUrl }} style={styles.image} />
-            <View style={styles.details}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.price}>{item.price.toLocaleString()} đ</Text>
-              <Text style={styles.quantity}>Số lượng: {item.quantity}</Text>
-              <View style={styles.quantityControl}>
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => changeQuantity(item.id, item.quantity - 1)}>
-                  <Text style={styles.buttonText}>-</Text>
-                </TouchableOpacity>
-                <Text style={styles.buttonText}>{item.quantity}</Text>
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => changeQuantity(item.id, item.quantity + 1)}>
-                  <Text style={styles.buttonText}>+</Text>
-                </TouchableOpacity>
+        keyExtractor={item => item.id}
+        renderItem={({item}) => (
+          <View style={styles.cartRow}>
+            <TouchableOpacity onPress={() => toggleSelectItem(item.id)}>
+              <View style={styles.checkbox}>
+                <View
+                  style={
+                    selectedItems.includes(item.id)
+                      ? styles.checkboxSelected
+                      : styles.checkboxUnselected
+                  }
+                />
               </View>
-            </View>
+            </TouchableOpacity>
+            <CartItem
+              name={item.name}
+              price={item.price}
+              imageUrl={item.imageUrl}
+              quantity={item.quantity}
+              variantOptions={['nhỏ', 'vừa', 'lớn']}
+              onQuantityChange={qty => changeQuantity(item.id, qty)}
+            />
           </View>
         )}
       />
-      {cart.length > 0 && (
+
+      {selectedItems.length > 0 && (
         <View style={styles.footer}>
-          <Text style={styles.totalText}>Tổng tiền: {totalPrice.toLocaleString()} đ</Text>
-          <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
-            <Text style={styles.checkoutText}>Thanh toán</Text>
+          <Text style={styles.totalText}>
+            Tổng giá: {totalPrice.toLocaleString()} đ
+          </Text>
+          <TouchableOpacity
+            style={styles.checkoutButton}
+            onPress={handleCheckout}>
+            <Text style={styles.checkoutText}>Mua ngay</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -165,20 +145,60 @@ const CartScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10 },
-  item: { flexDirection: 'row', marginBottom: 10, alignItems: 'center' },
-  image: { width: 80, height: 80, marginRight: 10, borderRadius: 8 },
-  details: { flex: 1 },
-  name: { fontSize: 16, fontWeight: 'bold' },
-  price: { fontSize: 14, color: 'red', marginBottom: 5 },
-  quantity: { fontSize: 14, marginBottom: 5 },
-  footer: { padding: 15, borderTopWidth: 1, borderColor: '#ddd', alignItems: 'center' },
-  totalText: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-  checkoutButton: { backgroundColor: 'green', padding: 10, borderRadius: 5 },
-  checkoutText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
-  quantityControl: { flexDirection: 'row', alignItems: 'center' },
-  button: { padding: 10, backgroundColor: '#ddd', marginHorizontal: 5, borderRadius: 5 },
-  buttonText: { fontSize: 16, fontWeight: 'bold' },
+  container: {flex: 1, backgroundColor: '#f8f8f8', marginTop: 30},
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    borderTopWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#fff',
+  },
+  header: {
+    backgroundColor: '#f2f2f2',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  backButton: {
+    marginRight: 8,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  totalText: {fontSize: 16, fontWeight: 'bold', color: 'red'},
+  checkoutButton: {backgroundColor: 'red', padding: 10, borderRadius: 5},
+  checkoutText: {color: '#fff', fontSize: 16, fontWeight: 'bold'},
+  cartRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    marginVertical: 4,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxSelected: {
+    width: 16,
+    height: 16,
+    backgroundColor: 'red',
+  },
+  checkboxUnselected: {
+    width: 16,
+    height: 16,
+    backgroundColor: '#fff',
+  },
 });
 
 export default CartScreen;

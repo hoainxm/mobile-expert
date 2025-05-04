@@ -4,9 +4,9 @@ const Order = require("../models/Order");
 
 exports.createOrder = async (req, res) => {
   try {
-    const { userId, totalAmount, items, paymentMethod } = req.body;
+    const { userId, totalAmount, items, paymentMethod, address } = req.body;
     console.log('Dữ liệu nhận được:', req.body);
-
+    
     if (!userId) {
       return res.status(400).json({ message: 'Thiếu userId' });
     }
@@ -22,6 +22,11 @@ exports.createOrder = async (req, res) => {
       totalAmount,
       products,
       paymentMethod,
+      address: {
+        name: address.name,
+        phone: address.phone,
+        address: address.address,
+      },
       status: 'Pending',
     });
 
@@ -43,7 +48,7 @@ exports.getOrdersbyUserId = async (req, res) => {
   try {
     const { userId } = req.params;
     const orders = await Order.find({ userId });
-    console.log("hheh");
+    console.log("hheh",orders);
 
     if (orders.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy đơn hàng của người dùng này' });
@@ -58,50 +63,46 @@ exports.getOrdersbyUserId = async (req, res) => {
 // thông kê dòng tiền 
 exports.getOrderByUserIdStatistics = async (req, res) => {
   try {
-    const { userId } = req.params;
-    console.log('userId:', userId); // Kiểm tra giá trị của userId
-    const orders = await Order.find({
-      userId: new mongoose.Types.ObjectId(userId), // Chuyển đổi userId thành ObjectId
-    });
+    const userId = req.user?.id || req.params?.userId;
 
-    if (orders.length === 0) {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
+    const orders = await Order.find({ userId });
+
+    if (!orders || orders.length === 0) {
       return res.status(200).json({ message: 'Không tìm thấy đơn hàng của người dùng này' });
     }
-    const complateStatus = 'complate';
+
     const stats = await Order.aggregate([
       {
         $match: {
-          userId: new mongoose.Types.ObjectId(userId), // Chuyển đổi userId thành ObjectId
-          status: complateStatus, 
-        }
+          userId: new mongoose.Types.ObjectId(userId),
+          status: 'complate',
+        },
       },
       {
         $group: {
-          _id: null, // Group all matched documents into one result
-          completedOrdersCount: { $sum: 1 }, // Count the number of documents in the group
-          totalCompletedAmount: { $sum: "$totalAmount" } // Sum the 'totalAmount' field
-        }
+          _id: null,
+          completedOrdersCount: { $sum: 1 },
+          totalCompletedAmount: { $sum: '$totalAmount' },
+        },
       },
       {
-         $project: {
-           _id: 0, // Exclude the default _id field from the group stage
-           completedOrdersCount: 1,
-           totalCompletedAmount: 1
-         }
-      }
+        $project: {
+          _id: 0,
+          completedOrdersCount: 1,
+          totalCompletedAmount: 1,
+        },
+      },
     ]);
-    console.log('Thống kê đơn hàng:', stats); // Kiểm tra kết quả thống kê
 
-    if (stats.length === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy đơn hàng đã hoàn thành của người dùng này' });
+    if (!stats.length) {
+      return res.status(200).json({ completedOrdersCount: 0, totalCompletedAmount: 0 });
     }
-    const result = {
-      completedOrdersCount: stats[0].completedOrdersCount,
-      totalCompletedAmount: stats[0].totalCompletedAmount,
-    };
-    console.log('Kết quả thống kê:', result); // Kiểm tra kết quả cuối cùng
 
-    res.status(200).json(result);
+    res.status(200).json(stats[0]);
 
   } catch (error) {
     console.error('Error fetching user order stats:', error);
